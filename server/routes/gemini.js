@@ -7,7 +7,7 @@ const ai = new GoogleGenAI({apiKey: process.env.GOOGLE_GEN_AI_KEY});
 async function main() {
   const response = await ai.models.generateContent({
     model: "gemini-2.5-flash",
-    contents: "give me a poet about a man named Chonk and how fat he is, only include the poem without any other text",
+    contents: "you are a professional nutrionist and the user's ai assistant. The user wants to eat a healthy meal with chicken breast, not exceeding 700 calories, provide a recipe to him, also including nutritional information and a short snippet of how it would fit their health goals",
   });
   return response.text
 }
