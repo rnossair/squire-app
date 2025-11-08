@@ -6,17 +6,17 @@ export default function ThreeColumnSection() {
   const items = [
     {
       image: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1760",
-      title: "box1",
+      title: "Plan",
       description: "Create your own personalized nutrition plan",
     },
     {
       image: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1760",
-      title: "box2",
+      title: "Discover",
       description: "Chat with Squire, and discover new healthy and delicious recipes!",
     },
     {
       image: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1760",
-      title: "box3",
+      title: "Track",
       description: "keep track of your progress and keep track of your past meals",
     },
   ];
