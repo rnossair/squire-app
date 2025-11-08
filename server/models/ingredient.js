@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 
-const ingredientSchema = new mongoose.Schema({
+const ingredientSchema = new mongoose.Schema(
+{
     // Reference to the user
     userId: {
         type: String,
@@ -9,12 +10,7 @@ const ingredientSchema = new mongoose.Schema({
         index: true 
     },
     
-    // Type and Source of the Meal (Important for logging external vs. home-cooked)
-    mealType: { 
-        type: String, 
-        enum: ['breakfast', 'lunch', 'dinner', 'snack', 'external'], 
-        required: true 
-    },
+    // Type and Source of the ingredient (Important for logging external vs. home-cooked)
     source: { 
         type: String, 
         enum: ['other', 'DoorDash', 'UberEats', 'manual'], 
@@ -23,17 +19,15 @@ const ingredientSchema = new mongoose.Schema({
     },
 
     // Nutritional Details (Pulled from the Gemini response)
-    mealName: { type: String, required: true },
+    ingredientName: { type: String, required: true },
     totalCalories: { type: Number, required: true },
     proteinGrams: { type: Number, default: 0, required: true },
     fatGrams: { type: Number, default: 0, required: true  },
     carbGrams: { type: Number, default: 0, required: true  },
 
-    // Reference to the original recipe (if home-cooked, optional)
-    recipeId: { type: mongoose.Schema.Types.ObjectId, ref: 'Recipe', required: false },
 
 }, {
     timestamps: true // Tracks when the meal was logged
 });
 
-module.exports = mongoose.model('ingredient', MealLogSchema);
+module.exports = mongoose.model('Ingredient', ingredientSchema);
