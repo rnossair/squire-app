@@ -5,7 +5,7 @@ import BoxButton from "../Components/BoxButton";
 
 export default function Home() {
   return (
-    <div className="min-h-screen font-sans dark:bg-black bg-gray-50">
+    <div className="min-h-screen font-sans dark:bg-light bg-gray-50">
       <main
         className="
           flex flex-col

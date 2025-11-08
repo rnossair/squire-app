@@ -13,7 +13,7 @@ export default function Navbar() {
             <div className="container h-20 justify-between flex">
                 <h2 className="homebtn h-full w-40 flex items-center justify-center">
                     <Link href="/" className="h-full w-full flex items-center justify-center text-[clamp(2em,2vw,3vw)] font-bold text-green-400 hover:text-green-200 transition-colors">
-                    [ Squire ]
+                        [ Squire ]
                     </Link>
                 </h2>
 
@@ -29,18 +29,16 @@ export default function Navbar() {
                         <span />
                     </button>
 
-                    <ul className={`menu ${open ? 'open' : ''} bg-zinc-50 top-2em justify-between text-black max-[768px]:w-[clamp(2em,37vw,42vw)] max-[768px]:h-35 max-[768px]:text-[clamp(1.4em,2vw,3vw)]`}>
+                    <ul className={`menu ${open ? 'open' : ''} bg-zinc-50 top-2em justify-between items-center text-black max-[768px]:w-[clamp(2em,37vw,42vw)] max-[768px]:h-35 max-[768px]:text-[clamp(1.4em,2vw,3vw)]`}>
                         <li>
                             <Link href="/">Home</Link>
                         </li>
                         <li>
-                            <Link href="/about">About</Link>
-                        </li>
-                        <li>
-                            <Link href="/services">Services</Link>
-                        </li>
-                        <li>
-                            <Link href="/contact">Contact</Link>
+                            <Link href="/dashboard">
+                                <button className="bg-black hover:bg-green-300 text-white font-bold py-2 px-4 rounded">
+                                    Dashboard
+                                </button>
+                            </Link>
                         </li>
                     </ul>
                 </div>
@@ -120,6 +118,6 @@ export default function Navbar() {
                     }
                 }
             `}</style>
-        </nav>
+        </nav >
     )
 }
