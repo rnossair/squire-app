@@ -27,7 +27,19 @@ export default function Home() {
   }
 
   useEffect(() => {
-    const payload = { userId: "6910899638cf892feabd5b04", count:1 };
+    // Fetch user data from backend
+    fetch("https://squire-app.onrender.com/users/get-user", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: "69107e6f9c503029b94e791a" }), // Replace with actual userId
+    })
+      .then(res => res.json())
+      .then(data => setUserData(data))
+      .catch(err => console.error(err));
+  }, []);
+
+  useEffect(() => {
+    const payload = { userId: "69107e6f9c503029b94e791a", count:1 };
 
     fetch("https://squire-app.onrender.com/meals/get-meals", {
       method: "POST",
@@ -36,18 +48,21 @@ export default function Home() {
     })
       .then(res => res.json())
       .then(data => {
-        setUserData(data);
         let totalCals = 50
         let totalProtein = 0  
         let totalCarbs = 0
         let totalFats = 0
-        data.meals.forEach(meal => {
+        console.log(data.mealLogs[0].meals)
+        console.log("WHAT")
+        data.mealLogs[0].meals.forEach(meal => {
           totalCals += meal.totalCalories;
-          totalProtein += meal.totalProtein;
-          totalFats += meal.totalFats;
-          totalCarbs += meal.totalCarbs;
+          totalProtein += meal.proteinGrams;
+          totalFats += meal.fatGrams;
+          totalCarbs += meal.carbGrams;
         })
-
+        while(userData === null){
+          console.log("waiting for userData");
+        }
         console.log(totalCals, totalProtein, totalCarbs, totalFats)
         // initialize daily goals from fetched data
         setDailyCalories(data.targetCalories || 2500);
@@ -56,10 +71,10 @@ export default function Home() {
         setDailyFats(data.targetFat || 40);
 
         // initialize remaining macros from fetched data
-        setRemainingCalories(data.targetCalories - totalCals);
-        setRemainingProteins(data.targetProtein - totalProtein);
-        setRemainingCarbs(data.targetCarbs - totalCarbs);
-        setRemainingFats(data.targetFat - totalFats);
+        setRemainingCalories(Math.max(userData.targetCalories - totalCals,0));
+        setRemainingProteins(userData.targetProtein - totalProtein);
+        setRemainingCarbs(userData.targetCarbs - totalCarbs);
+        setRemainingFats(userData.targetFat - totalFats);
       })
       .catch(err => console.error(err));
   }, [userData]);
@@ -106,6 +121,7 @@ export default function Home() {
 
 
 
+ 
 
   const handleSearch = async (query) => {
     if (!query.trim()) return;
@@ -385,8 +401,8 @@ export default function Home() {
   // }
 
 
-
-
+console.log(userData);
+ console.log("HIIII", remainingCalories, remainingProteins, remainingCarbs, remainingFats);
 
   return (
     <div className="min-h-screen font-sans dark:bg-light bg-white">
