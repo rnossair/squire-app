@@ -178,50 +178,71 @@ export default function Home() {
   const [mealLogId, setMealLogId] = useState(null);
 
   async function logMeal() {
-    if (!currentRecipe || !userId) return;
+  if (!currentRecipe || !userId) return;
 
-    try {
-      let logId = mealLogId;
+  try {
+    let logId = mealLogId;
 
-      // Step 1: Ensure the meal log exists
-      if (!logId) {
+    // Step 1: Fetch the latest meal log for the user
+    if (!logId) {
+      const resGet = await fetch("https://squire-app.onrender.com/meals/get-meals", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, count: 1 }), // get latest meal log
+      });
+
+      const { mealLogs } = await resGet.json();
+      const latestLog = mealLogs && mealLogs.length > 0 ? mealLogs[0] : null;
+
+      const today = new Date();
+      const isSameDay = latestLog
+        ? new Date(latestLog.createdAt).toDateString() === today.toDateString()
+        : false;
+
+      if (latestLog && isSameDay) {
+        logId = latestLog._id; // use existing meal log
+      } else {
+        // create a new meal log
         const resCreate = await fetch("https://squire-app.onrender.com/meals/create", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ userId }),
         });
 
-        const createData = await resCreate.json(); // ⬅ use a different name
-        logId = createData._id; // store the new meal log id in a local variable
-        setMealLogId(logId); // update state too
+        const createData = await resCreate.json();
+        logId = createData._id;
       }
 
-      // Step 2: Construct the meal object
-      const meal = {
-        mealType: currentRecipe.mealType || "lunch",
-        source: currentRecipe.source || "home-cooked",
-        meal_id: new Date().getTime().toString(),
-        mealName: currentRecipe.recipeName,
-        totalCalories: currentRecipe.totalCalories,
-        proteinGrams: currentRecipe.proteinGrams,
-        carbGrams: currentRecipe.carbGrams,
-        fatGrams: currentRecipe.fatGrams,
-      };
-
-      // Step 3: Add meal to the log
-      const resAdd = await fetch("https://squire-app.onrender.com/meals/add-meal", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mealLog_id: logId, meal }),
-      });
-
-      const updatedLog = await resAdd.json();
-      console.log("✅ Meal added:", updatedLog);
-
-    } catch (err) {
-      console.error("❌ Error logging meal:", err);
+      setMealLogId(logId); // store the log ID in state
     }
+
+    // Step 2: Construct the meal object
+    const meal = {
+      mealType: currentRecipe.mealType || "lunch",
+      source: currentRecipe.source || "home-cooked",
+      meal_id: new Date().getTime().toString(),
+      mealName: currentRecipe.recipeName,
+      totalCalories: currentRecipe.totalCalories,
+      proteinGrams: currentRecipe.proteinGrams,
+      carbGrams: currentRecipe.carbGrams,
+      fatGrams: currentRecipe.fatGrams,
+    };
+
+    // Step 3: Add meal to the log
+    const resAdd = await fetch("https://squire-app.onrender.com/meals/add-meal", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ mealLog_id: logId, meal }),
+    });
+
+    const updatedLog = await resAdd.json();
+    console.log("✅ Meal added:", updatedLog);
+
+  } catch (err) {
+    console.error("❌ Error logging meal:", err);
   }
+}
+
 
 
 
