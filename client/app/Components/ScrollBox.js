@@ -37,11 +37,11 @@ export default function ScrollBox(props) {
     console.log(mealLogs)
 
     return (
-        <div className="w-96 h-64 bg-gray-100 p-4 overflow-y-auto custom-scrollbar">
+        <div className="w-300 bg-gray-100 p-4 overflow-x-auto custom-scrollbar flex flex-row pl-2">
             {
                 mealLogs.length !== 0 ? (
                     mealLogs.map((mealLog, index) => (
-                        <div key={index}>
+                        <div key={index} className="pl-4">
                             <h2 className="font-bold">Day {index + 1}</h2>
                             {mealLog.meals.map((meal) => (
                                 <div key={meal.meal_id} className="flex flex-col">
