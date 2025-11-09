@@ -32,8 +32,6 @@ export default function Home() {
   }, [])
 
 
-
-
   const recipeData = {
     "recipeName": "Asian-Inspired Chicken & Broccoli Stir-fry",
     "totalCalories": 630,
@@ -95,7 +93,7 @@ export default function Home() {
   const [dailyProteins, setDailyProteins] = useState(150);
   const [dailyCarbs, setDailyCarbs] = useState(250);
   const [dailyFats, setDailyFats] = useState(40);
-  const [userId, setUserId] = useState("");
+  const [userId, setUserId] = useState("690fc7733d3f4948a7d89600");
 
   // Setting these daily values to user data fetched.
   useEffect(() => {
@@ -151,6 +149,9 @@ export default function Home() {
     setRemainingProteins(prev => Math.max(prev - currentRecipe.proteinGrams, 0));
     setRemainingCarbs(prev => Math.max(prev - currentRecipe.carbGrams, 0));
     setRemainingFats(prev => Math.max(prev - currentRecipe.fatGrams, 0));
+
+    // Implement posting to meal log
+
   };
 
   const calorieData = [
@@ -173,6 +174,85 @@ export default function Home() {
     { name: 'Consumed', value: dailyFats - remainingFats },
     { name: 'Remaining', value: remainingFats },
   ];
+
+  const [mealLogId, setMealLogId] = useState(null);
+
+  async function logMeal() {
+    if (!currentRecipe || !userId) return;
+
+    try {
+      let logId = mealLogId;
+
+      // Step 1: Ensure the meal log exists
+      if (!logId) {
+        const resCreate = await fetch("https://squire-app.onrender.com/meals/create", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId }),
+        });
+
+        const createData = await resCreate.json(); // ⬅ use a different name
+        logId = createData._id; // store the new meal log id in a local variable
+        setMealLogId(logId); // update state too
+      }
+
+      // Step 2: Construct the meal object
+      const meal = {
+        mealType: currentRecipe.mealType || "lunch",
+        source: currentRecipe.source || "home-cooked",
+        meal_id: new Date().getTime().toString(),
+        mealName: currentRecipe.recipeName,
+        totalCalories: currentRecipe.totalCalories,
+        proteinGrams: currentRecipe.proteinGrams,
+        carbGrams: currentRecipe.carbGrams,
+        fatGrams: currentRecipe.fatGrams,
+      };
+
+      // Step 3: Add meal to the log
+      const resAdd = await fetch("https://squire-app.onrender.com/meals/add-meal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mealLog_id: logId, meal }),
+      });
+
+      const updatedLog = await resAdd.json();
+      console.log("✅ Meal added:", updatedLog);
+
+    } catch (err) {
+      console.error("❌ Error logging meal:", err);
+    }
+  }
+
+
+
+
+
+
+
+  // async function createMealLog() {
+  //   try {
+  //     const response = await fetch("/meals/create", {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify({
+  //         userId, // 👈 send userId to backend
+  //       }),
+  //     });
+
+  //     if (!response.ok) throw new Error("Failed to create meal log");
+
+  //     const data = await response.json();
+  //     console.log("✅ Meal log created:", data);
+
+  //     // Suppose backend returns { mealLog_id: "abc123" }
+  //     setMealLogId(data.mealLog_id);
+
+  //   } catch (error) {
+  //     console.error("❌ Error creating meal log:", error);
+  //   }
+  // }
 
 
 
@@ -250,7 +330,10 @@ export default function Home() {
               <SearchResult text={resultText} />
               <button
                 className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-                onClick={addRecipeToDailyIntake}
+                onClick={() => {
+                  addRecipeToDailyIntake();
+                  logMeal(); // 👈 added this line
+                }}
               >
                 Add to Daily Intake
               </button>

@@ -1,105 +1,108 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
+const mongoose = require("mongoose");
+const MealLog = require("../models/MealLog");
 
-const MealLog = require('../models/mealLog');
+const ObjectId = mongoose.Types.ObjectId;
 
-ObjectId = require('mongoose').Types.ObjectId;
+// ------------------------------
+// Create a new meal log
+// ------------------------------
+router.post("/create", async (req, res) => {
+  try {
+    const { userId } = req.body;
 
-// POST /api/users - Create a new meal log
-router.post('/create', async (req, res) => {
-    try {
-        // 1. Create a new instance of the model with the request body data
-        const newMealLog = new MealLog({
-            userId: req.body.userId,
-            meals: []
-        });
+    if (!userId) return res.status(400).json({ error: "Missing userId" });
 
-        // 2. Save the new document to MongoDB
-        const savedMeal = await newMealLog.save();
+    const newMealLog = new MealLog({
+      userId,
+      meals: [], // start empty
+    });
 
-        // 3. Respond with the created item
-        res.status(201).json(savedMeal);
+    const savedMealLog = await newMealLog.save();
 
-    } catch (err) {
-        // Handle validation or database errors
-        res.status(400).json({ message: err.message });
-    }
+    res.status(201).json(savedMealLog);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
 });
 
-router.post('/add-meal', async (req, res) => {
-    try {
-        const { userId, meal, mealLog_id } = req.body;
+// ------------------------------
+// Add a meal to an existing log
+// ------------------------------
+router.post("/add-meal", async (req, res) => {
+  try {
+    const { mealLog_id, meal } = req.body;
 
-        // Find the meal log for the user
-        let new_id = new ObjectId();
-        meal.meal_id = new_id.toString();
-        const mealLog = await MealLog.findById(mealLog_id);
-        if (!mealLog) {
-            return res.status(404).json({ message: 'Meal log not found for this user.' });
-        }
+    if (!mealLog_id || !meal) return res.status(400).json({ error: "Missing mealLog_id or meal" });
 
-        // Add the new meal to the meals array
-        mealLog.meals.push(meal);
+    // Ensure meal_id exists
+    if (!meal.meal_id) meal.meal_id = new ObjectId().toString();
 
-        // Save the updated meal log
-        const updatedMealLog = await mealLog.save();
+    const mealLog = await MealLog.findById(mealLog_id);
+    if (!mealLog) return res.status(404).json({ error: "Meal log not found" });
 
-        // Respond with the updated meal log
-        res.status(200).json(updatedMealLog);
+    mealLog.meals.push(meal);
+    const updatedMealLog = await mealLog.save();
 
-    } catch (err) {
-        // Handle errors
-        res.status(400).json({ message: err.message });
-    }
+    res.status(200).json(updatedMealLog);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
 });
 
-router.post('/del-meal', async (req, res) => {
-    try {
-        const { userId, mealLog_id, meal_id } = req.body;
+// ------------------------------
+// Delete a meal from a log
+// ------------------------------
+router.post("/del-meal", async (req, res) => {
+  try {
+    const { mealLog_id, meal_id } = req.body;
 
-        // Find the meal log for the user
-        const mealLog = await MealLog.findById(mealLog_id);
-        if (!mealLog) {
-            return res.status(404).json({ message: 'Meal log not found for this user and ID.' });
-        }
+    if (!mealLog_id || !meal_id) return res.status(400).json({ error: "Missing mealLog_id or meal_id" });
 
-        // Find the meal to delete
-        mealLog.meals.filter((meal) => meal.meal_id != meal_id);
+    const mealLog = await MealLog.findById(mealLog_id);
+    if (!mealLog) return res.status(404).json({ error: "Meal log not found" });
 
-        // Save the updated meal log
-        const updatedMealLog = await mealLog.save();
+    // Remove the meal
+    mealLog.meals = mealLog.meals.filter((m) => m.meal_id !== meal_id);
 
-        // Respond with the updated meal log
-        res.status(200).json(updatedMealLog);
-
-    } catch (err) {
-        // Handle errors
-        res.status(400).json({ message: err.message });
-    }
+    const updatedMealLog = await mealLog.save();
+    res.status(200).json(updatedMealLog);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
 });
 
-router.post('/get-meals', async(req,res) => {
-    try {
-        const { userId, count } = req.body;
-        let mealLogNum = count;
-        if(mealLogNum == null){
-            mealLogNum = 7;
-        }
-        const mealLogs = await MealLog.find({ userId: userId })
-            .sort({ createdAt: -1 })
-            .limit(mealLogNum);
-            
-        res.status(200).json({mealLogs: mealLogs});
+// ------------------------------
+// Fetch recent meal logs
+// ------------------------------
+router.post("/get-meals", async (req, res) => {
+  try {
+    const { userId, count } = req.body;
 
-    } catch (err) {
-        // Handle errors
-        res.status(400).json({ message: err.message });
-    }
-})
+    if (!userId) return res.status(400).json({ error: "Missing userId" });
 
-/* GET users listing. */
-router.get('/user', function (req, res, next) {
-    res.send('respond with a resource');
+    const limit = count || 7;
+
+    const mealLogs = await MealLog.find({ userId })
+      .sort({ createdAt: -1 })
+      .limit(limit);
+
+    res.status(200).json({ mealLogs });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// ------------------------------
+// Test route
+// ------------------------------
+router.get("/user", (req, res) => {
+  res.send("respond with a resource");
 });
 
 module.exports = router;
