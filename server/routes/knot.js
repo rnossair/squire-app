@@ -39,7 +39,7 @@ router.post('/session/create', async (req, res) => {
 
         if (knotResponse.ok && data.session) {
             // 3. Return the sessionId to the frontend
-            res.status(200).json({ sessionId: data.session_id });
+            res.status(200).json({ session: data.session });
         } else {
             // Handle Knot API specific errors
             res.status(400).json({ message: "Failed to generate Knot session.", details: data });

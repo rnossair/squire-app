@@ -11,7 +11,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 // 1. Calls Express to get the temporary session ID
 const getKnotSessionId = async (userId) => {
-    const response = await fetch(`http://localhost:8000/knot/session/create`, {
+    const response = await fetch(`https://squire-app.onrender.com/knot/session/create`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId }),
