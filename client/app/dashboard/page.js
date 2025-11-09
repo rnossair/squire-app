@@ -81,9 +81,6 @@ export default function Home() {
   const [showResult, setShowResult] = useState(false);
   const [currentRecipe, setCurrentRecipe] = useState(null);
 
-
-
-
   const handleSearch = (query) => {
     if (!query.trim()) return;
 
