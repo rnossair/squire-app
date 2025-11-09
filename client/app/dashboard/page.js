@@ -127,10 +127,10 @@ export default function Home() {
   const handleSearch = async (query) => {
     if (!query.trim()) return;
 
-    fetch("http:/squire-app.onrender.com/recipes/suggest-meal", {
+    fetch("https://squire-app.onrender.com/recipes/suggest-meal", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId: userData._id, query: query }),
+      body: JSON.stringify({ userId: userId, query: query, remaningMacros:{remainingCalories: remainingCalories, remainingFats: remainingFats, remainingCarbs:remainingCarbs, remainingProteins:remainingProteins} }),
     })
       .then(res => {
         // --- 1. CRITICAL: Check the response status ---
