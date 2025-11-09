@@ -21,6 +21,7 @@ export default function Home() {
           </section>
         </div>
        
+       
       </main>
       <section id="about" className="relative mb-8, bg-grey-600 z-0 py-110">
             <ThreeColumnSection />
