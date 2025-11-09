@@ -1,14 +1,8 @@
 const mongoose = require('mongoose');
 
-const UserGoalSchema = new mongoose.Schema({
-    // --- Authentication and Goal Settings (Static/Rarely Updated) ---
-    userId: { 
-        type: String, 
-        required: true, 
-        unique: true, 
-        index: true // Index for fast lookup by user ID
-    },
-    
+const UserSchema = new mongoose.Schema({
+    preferred_name: { type: String, default: "User", required: true },
+    name: { type: String, default: "John Doe", required: true },
     // Calculated Targets (The goal for the entire day)
     targetCalories: { type: Number, required: true },
     targetProtein: { type: Number, required: true },
@@ -21,10 +15,10 @@ const UserGoalSchema = new mongoose.Schema({
 
     // --- Dynamic Daily Budget (CRITICAL for AI Input) ---
     // This is updated with every logged meal.
-    remainingCalories: { type: Number, default: targetCalories },
-    remainingProtein: { type: Number, default: targetProtein },
-    remainingFat: { type: Number, default: targetFat },
-    remainingCarbs: { type: Number, default: targetCarbs },
+    remainingCalories: { type: Number, default: this.targetCalories },
+    remainingProtein: { type: Number, default: this.targetProtein },
+    remainingFat: { type: Number, default: this.targetFat },
+    remainingCarbs: { type: Number, default: this.targetCarbs },
 
     // Last time the budget was reset (e.g., end of the day)
     lastResetDate: { type: Date, default: Date.now }, 
@@ -38,4 +32,4 @@ const UserGoalSchema = new mongoose.Schema({
     timestamps: true 
 });
 
-module.exports = mongoose.model('UserGoal', UserGoalSchema);
+module.exports = mongoose.model('User', UserSchema);

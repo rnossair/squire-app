@@ -6,9 +6,12 @@ var logger = require('morgan');
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
-var recipeRouter = require('./routes/recipe');
+var recipeRouter = require('./routes/suggestrecipe');
+var ingredientRouter = require('./routes/ingredients');
+var mealRouter = require('./routes/meals');
 
 const mongoose = require('mongoose');
+var cors = require('cors');
 
 var app = express();
 
@@ -17,6 +20,7 @@ require('dotenv').config()
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
+app.use(cors());
 
 app.use(logger('dev'));
 app.use(express.json());
@@ -41,6 +45,8 @@ mongoose.connect(MONGODB_URI)
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/api', recipeRouter);
+app.use('/ingredients', ingredientRouter);
+app.use('/meals', mealRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

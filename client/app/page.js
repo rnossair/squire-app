@@ -8,7 +8,7 @@ import ThreeColumnSection from './Components/ThreeColumnSection';
 export default function Home() {
   return (
     
-    <div className="flex relative min-h-screen items-center justify-center font-sans dark:bg-black">
+    <div className="flex relative min-h-screen items-center justify-center font-sans dark:bg-white">
       <main className="absolute inset-1 flex flex-col space-y-4 z-1">
         <div className="px-10 justify-start">
           <h1 className="h-full w-full flex items-center justify-left text-[clamp(2em,2vw,3vw)] font-bold text-[clamp(2em,2vw,3vw)]">Healthy nutrition, made simple</h1>
