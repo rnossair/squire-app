@@ -1,6 +1,6 @@
 'use client'; 
 import dynamic from 'next/dynamic';
-import KnotapiJS from 'knotapi-js';
+// import KnotapiJS from 'knotapi-js';
 import React, { useState, useEffect } from 'react';
 // import KnotapiJS  from 'knotapi-js';
 
@@ -60,6 +60,7 @@ export default function KnotLinkPage() {
             const sessionId = await getKnotSessionId(MOCK_USER_ID);
 
             // STEP 2: Initialize and Open the Widget;
+            const KnotapiJS = window.KnotapiJS.default
             const knotapi = new KnotapiJS();
             
             knotapi.open({
@@ -103,7 +104,7 @@ export default function KnotLinkPage() {
     // --- RENDER ---
     return (
         <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-50">
-            
+            <script src="https://unpkg.com/knotapi-js@next"></script>
             <div className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md">
                 <h1 className="text-3xl font-bold mb-6 text-center">
                     Link Merchant Accounts 🛒
