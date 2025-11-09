@@ -48,7 +48,7 @@ export default function Home() {
     })
       .then(res => res.json())
       .then(data => {
-        let totalCals = 50
+        let totalCals = 0
         let totalProtein = 0  
         let totalCarbs = 0
         let totalFats = 0

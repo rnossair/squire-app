@@ -10,7 +10,7 @@ const txn_fetch = fetch("https://knot.tunnel.tel/transactions/sync", {
     headers: {
         "Content-Type": "application/json"
     },
-    body: JSON.stringify({ merchant_id: 19, limit: 25 })
+    body: JSON.stringify({ merchant_id: 40, limit: 25 })
 }).then(response => response.json())
     .then(data => data.transactions)
     .then(txn => txn.filter(txn => txn.order_status == "COMPLETED"))
