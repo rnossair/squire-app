@@ -15,7 +15,7 @@ import { useRouter } from "next/navigation";
 
 
 export default function Home() {
-  const [userData, setUserData] = useState({})
+  const [userData, setUserData] = useState()
   const [genRecipe, setGenRecipe] = useState(false);
   const [, forceUpdate] = useReducer(updater, 0)
 
@@ -65,6 +65,7 @@ export default function Home() {
         }
         console.log(totalCals, totalProtein, totalCarbs, totalFats)
         // initialize daily goals from fetched data
+        if(userData == null) return;
         setDailyCalories(userData.targetCalories || 2500);
         setDailyProteins(userData.targetProtein || 150);
         setDailyCarbs(userData.targetCarbs || 250);
@@ -428,7 +429,7 @@ console.log(userData);
             font-semibold
           "
             >
-              Hello, {userData.preferred_name || userData.name} 👋
+              Hello, {userData ? userData.preferred_name || userData.name : ""} 👋
             </h1>
             <div className="mt-30 max-lg:mt-3 max-lg:mb-3">
               <SearchBar
