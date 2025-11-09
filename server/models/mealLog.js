@@ -22,6 +22,8 @@ const MealLogSchema = new mongoose.Schema({
                 required: true
             },
 
+            meal_id: {type: String, required:true},
+
             // Nutritional Details (Pulled from the Gemini response)
             mealName: { type: String, required: true },
             totalCalories: { type: Number, required: true },
