@@ -350,7 +350,7 @@ export default function Home() {
           <Link href="/knot-integration">
             <BoxButton
               imageSrc="https://www.knotapi.com/static/images/favicons/apple-touch-icon.png"
-              title="Messages"
+              title="Sync merchant Data"
               onClick={() => console.log('Messages clicked!')}
             />
           </Link>

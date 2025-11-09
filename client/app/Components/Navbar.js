@@ -29,7 +29,7 @@ export default function Navbar() {
                         <span />
                     </button>
 
-                    <ul className={`menu ${open ? 'open' : ''} bg-zinc-50 top-2em justify-between items-center text-black max-[768px]:w-[clamp(2em,37vw,42vw)] max-[768px]:h-35 max-[768px]:text-[clamp(1.4em,2vw,3vw)]`}>
+                    <ul className={`menu ${open ? 'open' : ''} bg-zinc-50 top-2em justify-between items-center text-black max-[768px]:w-[clamp(2em,37vw,42vw)] max-[768px]:h-35 max-[768px]:text-[clamp(1.4em,2vw,3vw)] max-[768px]:z-3`}>
                         <li>
                             <Link href="/">Home</Link>
                         </li>
