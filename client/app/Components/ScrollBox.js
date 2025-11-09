@@ -44,9 +44,17 @@ export default function ScrollBox(props) {
                         <div key={index}>
                             <h2 className="font-bold">Day {index + 1}</h2>
                             {mealLog.meals.map((meal) => (
-                                <div key={meal.meal_id}>
-                                    {meal.mealName}
+                                <div key={meal.meal_id} className="flex flex-col">
+                                    <div className="pr-2">{meal.mealName}</div>
+
+                                    <div className="flex flex-row space-between">
+                                    <div className="pl-1 pr-1 ml-1 mr-1 rounded-md bg-[#22c55e]">{meal.totalCalories}kcal</div>
+                                    <div className="pl-1 pr-1 ml-1 mr-1 rounded-md bg-[#26f7fd]">P:{meal.proteinGrams}</div>
+                                    <div className="pl-1 pr-1 ml-1 mr-1 rounded-md bg-[#ff4c4cff]">F:{meal.fatGrams}</div>
+                                    <div className="pl-1 pr-1 ml-1 mr-1 rounded-md bg-[#f8ff26ff]">C:{meal.carbGrams}</div>
                                     </div>
+                                    
+                                </div>
                             ))}
                             
                         </div>
