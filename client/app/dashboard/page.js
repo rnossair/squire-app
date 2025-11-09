@@ -10,7 +10,8 @@ import Piechart from "../Components/Piechart";
 
 
 export default function Home() {
-  const [userData, setUserData] = useState({});
+  const [userData, setUserData] = useState({})
+
 
   useEffect(() => {
     const payload = { "userId": "690fc7733d3f4948a7d89600" }
@@ -24,10 +25,12 @@ export default function Home() {
     })
       .then(res => res.json())
       .then(data => setUserData(data))
+      .then(setDailyCalories(userData.targetCalories))
       .catch(err => console.error(err));
 
 
-  }, []);
+  }, [])
+
 
 
 
@@ -71,24 +74,6 @@ export default function Home() {
 
 
 
-  // Daily goals (placeholder values)
-  const dailyCalories = 2000;
-  const dailyProteins = 150;
-  const dailyCarbs = 250;
-  const dailyFats = 40;
-  const id = 123456;
-
-
-
-  // State for remaining macros
-  const [remainingCalories, setRemainingCalories] = useState(dailyCalories);
-  const [remainingProteins, setRemainingProtein] = useState(dailyProteins);
-  const [remainingCarbs, setRemainingCarbs] = useState(dailyCarbs);
-  const [remainingFats, setRemainingFat] = useState(dailyFats);
-
-  const [userId, setUserId] = useState(id);
-
-
 
   const handleSearch = (query) => {
     if (!query.trim()) return;
@@ -104,13 +89,68 @@ export default function Home() {
     }
   };
 
+
+  // Daily goals (placeholder values)
+  const [dailyCalories, setDailyCalories] = useState(2500);
+  const [dailyProteins, setDailyProteins] = useState(150);
+  const [dailyCarbs, setDailyCarbs] = useState(250);
+  const [dailyFats, setDailyFats] = useState(40);
+  const [userId, setUserId] = useState("");
+
+  // Setting these daily values to user data fetched.
+  useEffect(() => {
+    if (userData && userData.targetCalories) {
+      setDailyCalories(userData.targetCalories)
+    }
+  }, [userData])
+  useEffect(() => {
+    if (userData && userData.targetProtein) {
+      setDailyProteins(userData.targetProtein)
+    }
+  }, [userData])
+  useEffect(() => {
+    if (userData && userData.targetCarbs) {
+      setDailyCarbs(userData.targetCarbs)
+    }
+  }, [userData])
+  useEffect(() => {
+    if (userData && userData.targetFat) {
+      setDailyFats(userData.targetFat)
+    }
+  }, [userData])
+  // useEffect(() => {
+  //   if (userData && userData.userId) {
+  //     setUserId(userData.userId)
+  //   }
+  // }, [userData])
+
+  // State for remaining macros
+  const [remainingCalories, setRemainingCalories] = useState(dailyCalories);
+  const [remainingProteins, setRemainingProteins] = useState(dailyProteins);
+  const [remainingCarbs, setRemainingCarbs] = useState(dailyCarbs);
+  const [remainingFats, setRemainingFats] = useState(dailyFats);
+
+  // Setting remaining data to upddate to fetched user data.
+  useEffect(() => {
+    setRemainingCalories(dailyCalories);
+  }, [dailyCalories]);
+  useEffect(() => {
+    setRemainingProteins(dailyProteins);
+  }, [dailyProteins]);
+  useEffect(() => {
+    setRemainingCarbs(dailyCarbs);
+  }, [dailyCarbs]);
+  useEffect(() => {
+    setRemainingFats(dailyFats);
+  }, [dailyFats]);
+
   const addRecipeToDailyIntake = () => {
     if (!currentRecipe) return;
 
     setRemainingCalories(prev => Math.max(prev - currentRecipe.totalCalories, 0));
-    setRemainingProtein(prev => Math.max(prev - currentRecipe.proteinGrams, 0));
+    setRemainingProteins(prev => Math.max(prev - currentRecipe.proteinGrams, 0));
     setRemainingCarbs(prev => Math.max(prev - currentRecipe.carbGrams, 0));
-    setRemainingFat(prev => Math.max(prev - currentRecipe.fatGrams, 0));
+    setRemainingFats(prev => Math.max(prev - currentRecipe.fatGrams, 0));
   };
 
   const calorieData = [
