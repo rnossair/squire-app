@@ -127,7 +127,7 @@ export default function Home() {
   const handleSearch = async (query) => {
     if (!query.trim()) return;
 
-    fetch("http://localhost:8000/recipes/suggest-meal", {
+    fetch("http:/squire-app.onrender.com/recipes/suggest-meal", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userId: userData._id, query: query }),
