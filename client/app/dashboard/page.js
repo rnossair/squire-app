@@ -65,10 +65,10 @@ export default function Home() {
         }
         console.log(totalCals, totalProtein, totalCarbs, totalFats)
         // initialize daily goals from fetched data
-        setDailyCalories(data.targetCalories || 2500);
-        setDailyProteins(data.targetProtein || 150);
-        setDailyCarbs(data.targetCarbs || 250);
-        setDailyFats(data.targetFat || 40);
+        setDailyCalories(userData.targetCalories || 2500);
+        setDailyProteins(userData.targetProtein || 150);
+        setDailyCarbs(userData.targetCarbs || 250);
+        setDailyFats(userData.targetFat || 40);
 
         // initialize remaining macros from fetched data
         setRemainingCalories(Math.max(userData.targetCalories - totalCals,0));
