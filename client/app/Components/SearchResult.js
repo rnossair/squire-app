@@ -3,20 +3,8 @@ import React from "react";
 
 export default function SearchResult({ text }) {
   return (
-    <div
-      className="
-        w-full
-        bg-white
-        border border-gray-200
-        rounded-lg
-        shadow-md
-        p-4
-        transition-transform
-        hover:scale-[1.01]
-        whitespace-pre-wrap
-      "
-    >
-      <div className="text-gray-800">{text}</div>
+    <div className="w-full rounded-2xl border border-line bg-surface p-6 shadow-sm">
+      <div className="text-ink">{text}</div>
     </div>
   );
 }

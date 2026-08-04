@@ -1,29 +1,20 @@
 'use client';
 import React from 'react';
-import Image from 'next/image';
 
-export default function ImageBoxButton({ imageSrc, title, onClick }) {
+export default function BoxButton({ title, description, icon, onClick }) {
   return (
     <button
       onClick={onClick}
-      className="
-        flex flex-col items-center justify-center
-        bg-white shadow-md rounded-3xl
-        p-8 w-78 h-78
-        hover:shadow-xl hover:-translate-y-1
-        transition-all duration-300
-      "
+      className="group flex w-full items-center gap-4 rounded-2xl border border-line bg-surface p-5 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
     >
-      <div className="w-20 h-20 relative mb-3">
-        {/* <Image
-          src={imageSrc}
-          alt={title}
-          fill
-          className="object-contain"
-        /> */}
-        <img src={imageSrc} alt={title} className="object-contain w-full h-full" />
-      </div>
-      <span className="text-lg font-semibold text-gray-700">{title}</span>
+      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-sunk text-squire" aria-hidden="true">
+        {icon}
+      </span>
+      <span className="flex flex-col">
+        <span className="font-medium text-ink">{title}</span>
+        {description && <span className="text-sm text-ink-soft">{description}</span>}
+      </span>
+      <span className="ml-auto text-brass transition-transform group-hover:translate-x-1" aria-hidden="true">→</span>
     </button>
   )
 }

@@ -1,349 +1,168 @@
 'use client'
-import { useCallback, useEffect, useState, useReducer } from "react";
-import Image from "next/image";
+import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import SearchBar from "../Components/Searchbar";
 import BoxButton from "../Components/BoxButton";
 import SearchResult from "../Components/SearchResult";
 import { formatRecipe } from "../Components/formatRecipe";
 import ScrollBox from "../Components/ScrollBox";
-import Piechart from "../Components/Piechart";
-import Link from "next/link";
+import MacroRing from "../Components/MacroRing";
 
-import { useRouter } from "next/navigation";
+const API = "https://squire-app.onrender.com";
+const USER_ID = "69107e6f9c503029b94e791a";
 
+// Sensible defaults so the rings render even if the backend is asleep.
+const DEFAULT_TARGETS = { calories: 2500, protein: 150, carbs: 250, fat: 70 };
 
+const MACROS = [
+  { key: "calories", label: "Calories", unit: "kcal", color: "#3e6b3c" },
+  { key: "protein", label: "Protein", unit: "g", color: "#b4552e" },
+  { key: "carbs", label: "Carbs", unit: "g", color: "#bf922c" },
+  { key: "fat", label: "Fat", unit: "g", color: "#4e6e7a" },
+];
 
+function isToday(dateStr) {
+  if (!dateStr) return false;
+  return new Date(dateStr).toDateString() === new Date().toDateString();
+}
 
-export default function Home() {
-  const [userData, setUserData] = useState()
-  const [genRecipe, setGenRecipe] = useState(false);
-  const [, forceUpdate] = useReducer(updater, 0)
-
-  const router = useRouter();
-
-
-  function updater(state) {
-    return state + 1;
-  }
-
-  useEffect(() => {
-    // Fetch user data from backend
-    fetch("https://squire-app.onrender.com/users/get-user", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId: "69107e6f9c503029b94e791a" }), // Replace with actual userId
-    })
-      .then(res => res.json())
-      .then(data => setUserData(data))
-      .catch(err => console.error(err));
-  }, []);
-
-  useEffect(() => {
-    const payload = { userId: "69107e6f9c503029b94e791a", count:1 };
-
-    fetch("https://squire-app.onrender.com/meals/get-meals", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    })
-      .then(res => res.json())
-      .then(data => {
-        let totalCals = 0
-        let totalProtein = 0  
-        let totalCarbs = 0
-        let totalFats = 0
-        console.log(data.mealLogs[0].meals)
-        console.log("WHAT")
-        data.mealLogs[0].meals.forEach(meal => {
-          totalCals += meal.totalCalories;
-          totalProtein += meal.proteinGrams;
-          totalFats += meal.fatGrams;
-          totalCarbs += meal.carbGrams;
-        })
-        while(userData === null){
-          console.log("waiting for userData");
-        }
-        console.log(totalCals, totalProtein, totalCarbs, totalFats)
-        // initialize daily goals from fetched data
-        if(userData == null) return;
-        setDailyCalories(userData.targetCalories || 2500);
-        setDailyProteins(userData.targetProtein || 150);
-        setDailyCarbs(userData.targetCarbs || 250);
-        setDailyFats(userData.targetFat || 40);
-
-        // initialize remaining macros from fetched data
-        setRemainingCalories(Math.max(userData.targetCalories - totalCals,0));
-        setRemainingProteins(userData.targetProtein - totalProtein);
-        setRemainingCarbs(userData.targetCarbs - totalCarbs);
-        setRemainingFats(userData.targetFat - totalFats);
-      })
-      .catch(err => console.error(err));
-  }, [userData]);
-
-
-
-  const recipeData = {
-    "recipeName": "Asian-Inspired Chicken & Broccoli Stir-fry",
-    "totalCalories": 630,
-    "proteinGrams": 62,
-    "carbGrams": 72,
-    "fatGrams": 10,
-    "ingredients": [
-      "6 oz (about 170g) boneless, skinless chicken breast, thinly sliced",
-      "1.5 cups fresh broccoli florets",
-      "1 cup cooked white rice (about 1/2 cup uncooked)",
-      "2 cloves garlic, minced",
-      "1 inch fresh ginger, grated",
-      "2 tbsp low-sodium soy sauce",
-      "1 tbsp rice vinegar",
-      "1 tsp sesame oil",
-      "1/4 tsp black pepper",
-      "1/4 cup water or low-sodium chicken broth",
-      "1 tsp cornstarch (optional, for thickening)"
-    ],
-    "instructions": [
-      "In a small bowl, whisk together soy sauce, rice vinegar, sesame oil, black pepper, and water/broth. If using, dissolve cornstarch in a tablespoon of the liquid mixture and set aside.",
-      "Heat a large non-stick skillet or wok over medium-high heat. Add chicken and stir-fry until cooked through and lightly browned, about 4-6 minutes. Remove chicken from the skillet and set aside.",
-      "Add broccoli florets to the skillet. If needed, add a tablespoon of water to help steam them. Cook for 3-5 minutes until tender-crisp.",
-      "Add minced garlic and grated ginger to the skillet and stir-fry for 30 seconds until fragrant.",
-      "Return the cooked chicken to the skillet with the broccoli, garlic, and ginger. Pour the prepared sauce over everything. Bring to a simmer.",
-      "If using, stir in the cornstarch slurry and cook for another minute until the sauce thickens slightly.",
-      "Serve immediately over the cooked white rice."
-    ],
-    "matchReason": "This Asian-Inspired Chicken & Broccoli Stir-fry is an excellent choice for you, as it perfectly aligns with your preference for low-fat Asian cuisine and helps you meet your remaining protein goal while staying comfortably within your calorie limit.",
-    "funFact": "Chicken breast is not only a lean source of protein, but it also contains B vitamins like niacin and B6, which are crucial for energy metabolism and overall cell function."
-  }
-
+export default function Dashboard() {
+  const [userData, setUserData] = useState(null);
+  const [targets, setTargets] = useState(DEFAULT_TARGETS);
+  const [usingDefaults, setUsingDefaults] = useState(true);
+  const [consumed, setConsumed] = useState({ calories: 0, protein: 0, carbs: 0, fat: 0 });
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [resultText, setResultText] = useState("");
-  const [showResult, setShowResult] = useState(false);
+  const [resultText, setResultText] = useState(null);
   const [currentRecipe, setCurrentRecipe] = useState(null);
+  const [searchState, setSearchState] = useState("idle"); // idle | loading | done | error
+  const [logging, setLogging] = useState(false);
+  const [historyRefresh, setHistoryRefresh] = useState(0);
+  const [mealLogId, setMealLogId] = useState(null);
 
+  // 1. User + targets
+  useEffect(() => {
+    fetch(`${API}/users/get-user`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: USER_ID }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setUserData(data);
+        if (data?.targetCalories) {
+          setTargets({
+            calories: data.targetCalories,
+            protein: data.targetProtein ?? DEFAULT_TARGETS.protein,
+            carbs: data.targetCarbs ?? DEFAULT_TARGETS.carbs,
+            fat: data.targetFat ?? DEFAULT_TARGETS.fat,
+          });
+          setUsingDefaults(false);
+        }
+      })
+      .catch((err) => console.error("get-user failed", err));
+  }, []);
 
+  // 2. Today's consumed macros
+  useEffect(() => {
+    fetch(`${API}/meals/get-meals`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: USER_ID, count: 1 }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        const latest = data?.mealLogs?.[0];
+        if (!latest || !isToday(latest.createdAt)) return;
+        setMealLogId(latest._id);
+        const totals = latest.meals.reduce(
+          (acc, m) => ({
+            calories: acc.calories + (m.totalCalories || 0),
+            protein: acc.protein + (m.proteinGrams || 0),
+            carbs: acc.carbs + (m.carbGrams || 0),
+            fat: acc.fat + (m.fatGrams || 0),
+          }),
+          { calories: 0, protein: 0, carbs: 0, fat: 0 }
+        );
+        setConsumed(totals);
+      })
+      .catch((err) => console.error("get-meals failed", err));
+  }, []);
 
- 
+  const remaining = {
+    calories: Math.max(targets.calories - consumed.calories, 0),
+    protein: Math.max(targets.protein - consumed.protein, 0),
+    carbs: Math.max(targets.carbs - consumed.carbs, 0),
+    fat: Math.max(targets.fat - consumed.fat, 0),
+  };
 
   const handleSearch = async (query) => {
     if (!query.trim()) return;
-
-    fetch("https://squire-app.onrender.com/recipes/suggest-meal", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId: userId, query: query, remaningMacros:{remainingCalories: remainingCalories, remainingFats: remainingFats, remainingCarbs:remainingCarbs, remainingProteins:remainingProteins} }),
-    })
-      .then(res => {
-        // --- 1. CRITICAL: Check the response status ---
-        if (!res.ok) {
-          // If the status is NOT 200, parse the body for the error message
-          return res.json().then(error => {
-            throw new Error(error.message || `HTTP Error: ${res.status}`);
-          });
-        }
-        // If status IS OK, return the parsed JSON
-        return res.json();
-      })
-      .then(data => {
-        // --- 2. SUCCESS ---
-        setResultText(formatRecipe(data));
-        setCurrentRecipe(data);
-        setShowResult(true);
-      })
-      .catch(error => {
-        // --- 3. ERROR HANDLER ---
-        console.error("Recipe suggestion failed:", error);
-        setResultText(`Failed to get recipe: ${error.message}`);
-        setCurrentRecipe(null);
-        setShowResult(true);
-      });
-  };
-
-
-  // Daily goals (placeholder values)
-  const [dailyCalories, setDailyCalories] = useState(2500);
-  const [dailyProteins, setDailyProteins] = useState(150);
-  const [dailyCarbs, setDailyCarbs] = useState(250);
-  const [dailyFats, setDailyFats] = useState(40);
-  const [userId, setUserId] = useState("69107e6f9c503029b94e791a");
-
-  // Setting these daily values to user data fetched.
-  useEffect(() => {
-    if (userData && userData.targetCalories) {
-      setDailyCalories(userData.targetCalories)
-    }
-  }, [userData])
-  useEffect(() => {
-    if (userData && userData.targetProtein) {
-      setDailyProteins(userData.targetProtein)
-    }
-  }, [userData])
-  useEffect(() => {
-    if (userData && userData.targetCarbs) {
-      setDailyCarbs(userData.targetCarbs)
-    }
-  }, [userData])
-  useEffect(() => {
-    if (userData && userData.targetFat) {
-      setDailyFats(userData.targetFat)
-    }
-  }, [userData])
-  // useEffect(() => {
-  //   if (userData && userData.userId) {
-  //     setUserId(userData.userId)
-  //   }
-  // }, [userData])
-
-
-  // State for remaining macros
-  const [remainingCalories, setRemainingCalories] = useState(dailyCalories);
-  const [remainingProteins, setRemainingProteins] = useState(dailyProteins);
-  const [remainingCarbs, setRemainingCarbs] = useState(dailyCarbs);
-  const [remainingFats, setRemainingFats] = useState(dailyFats);
-
-  // // Setting remaining data to upddate to fetched user data.
-  // useEffect(() => {
-  //   if (userData && userData.remainingCalories) {
-  //     setRemainingCalories(userData.remainingCalories)
-  //   }
-  // }, [userData]);
-  // useEffect(() => {
-  //   if (userData && userData.remainingProtein) {
-  //     setRemainingProteins(userData.remainingProteins)
-  //   }
-  // }, [userData]);
-  // useEffect(() => {
-  //   if (userData && userData.remainingCarbs) {
-  //     setRemainingCarbs(userData.remainingCarbs)
-  //   }
-  // }, [userData]);
-  // useEffect(() => {
-  //   if (userData && userData.remainingFat) {
-  //     setRemainingFats(userData.remainingFats)
-  //   }
-  // }, [userData]);
-
-  // useEffect(() => {
-  //   setRemainingCalories(dailyCalories);
-  // }, [dailyCalories]);
-  // useEffect(() => {
-  //   setRemainingProteins(dailyProteins);
-  // }, [dailyProteins]);
-  // useEffect(() => {
-  //   setRemainingCarbs(dailyCarbs);
-  // }, [dailyCarbs]);
-  // useEffect(() => {
-  //   setRemainingFats(dailyFats);
-  // }, [dailyFats]);
-
-  const addRecipeToDailyIntake = async () => {
-    if (!currentRecipe) return;
-
-
-
-    // Step 1: Calculate new remaining macros
-    const newRemainingCalories = Math.max(remainingCalories - currentRecipe.totalCalories, 0);
-    const newRemainingProteins = Math.max(remainingProteins - currentRecipe.proteinGrams, 0);
-    const newRemainingCarbs = Math.max(remainingCarbs - currentRecipe.carbGrams, 0);
-    const newRemainingFats = Math.max(remainingFats - currentRecipe.fatGrams, 0);
-
-    // Step 2: Update state
-    setRemainingCalories(newRemainingCalories);
-    setRemainingProteins(newRemainingProteins);
-    setRemainingCarbs(newRemainingCarbs);
-    setRemainingFats(newRemainingFats);
-
-    // Step 3: Send updated macros to backend
+    setSearchState("loading");
+    setCurrentRecipe(null);
     try {
-      const response = await fetch("https://squire-app.onrender.com/users/update-macros", {
+      const res = await fetch(`${API}/recipes/suggest-meal`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          userId,
-          remainingCalories: newRemainingCalories,
-          remainingProteins: newRemainingProteins,
-          remainingCarbs: newRemainingCarbs,
-          remainingFats: newRemainingFats
+          userId: USER_ID,
+          query,
+          remaningMacros: {
+            remainingCalories: remaining.calories,
+            remainingFats: remaining.fat,
+            remainingCarbs: remaining.carbs,
+            remainingProteins: remaining.protein,
+          },
         }),
       });
-
-      if (!response.ok) throw new Error("Failed to update macros on backend");
-
-      const data = await response.json();
-      console.log("✅ Updated macros on backend:", data);
+      if (!res.ok) {
+        const error = await res.json().catch(() => ({}));
+        throw new Error(error.message || `Request failed (${res.status})`);
+      }
+      const data = await res.json();
+      setCurrentRecipe(data);
+      setResultText(formatRecipe(data));
+      setSearchState("done");
     } catch (err) {
-      console.error("❌ Error updating macros:", err);
+      console.error("suggest-meal failed", err);
+      setResultText(
+        <p className="text-ink-soft">
+          Squire couldn&apos;t reach the kitchen just now — {err.message}. Try asking again.
+        </p>
+      );
+      setSearchState("error");
     }
   };
 
+  // Add the suggested recipe to today: animate rings down, then persist. No reload.
+  const addToToday = useCallback(async () => {
+    if (!currentRecipe || logging) return;
+    setLogging(true);
 
-  const calorieData = [
-    { name: ' kcal' },
-    { name: 'Consumed', value: dailyCalories - remainingCalories },
-    { name: 'Remaining', value: remainingCalories },
-  ];
-  const proteinData = [
-    { name: 'g Protein' },
-    { name: 'Consumed', value: dailyProteins - remainingProteins },
-    { name: 'Remaining', value: remainingProteins },
-  ];
-  const carbData = [
-    { name: 'g Carbs' },
-    { name: 'Consumed', value: dailyCarbs - remainingCarbs },
-    { name: 'Remaining', value: remainingCarbs },
-  ];
-  const fatData = [
-    { name: 'g Fats' },
-    { name: 'Consumed', value: dailyFats - remainingFats },
-    { name: 'Remaining', value: remainingFats },
-  ];
-
-  const [mealLogId, setMealLogId] = useState(null);
-
-  const logMeal = useCallback(async () => {
-    if (!currentRecipe || !userId) return;
+    // Optimistic, animated update of the rings.
+    setConsumed((prev) => ({
+      calories: prev.calories + (currentRecipe.totalCalories || 0),
+      protein: prev.protein + (currentRecipe.proteinGrams || 0),
+      carbs: prev.carbs + (currentRecipe.carbGrams || 0),
+      fat: prev.fat + (currentRecipe.fatGrams || 0),
+    }));
 
     try {
       let logId = mealLogId;
-
-
-      // Step 1: Fetch the latest meal log for the user
       if (!logId) {
-        const resGet = await fetch("https://squire-app.onrender.com/meals/get-meals", {
+        const resCreate = await fetch(`${API}/meals/create`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId, count: 1 }), // get latest meal log
+          body: JSON.stringify({ userId: USER_ID }),
         });
-
-        const { mealLogs } = await resGet.json();
-        const latestLog = mealLogs && mealLogs.length > 0 ? mealLogs[0] : null;
-
-        const today = new Date();
-        const isSameDay = latestLog
-          ? new Date(latestLog.createdAt).toDateString() === today.toDateString()
-          : false;
-
-        if (latestLog && isSameDay) {
-          logId = latestLog._id; // use existing meal log
-        } else {
-          // create a new meal log
-          const resCreate = await fetch("https://squire-app.onrender.com/meals/create", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ userId }),
-          });
-
-          const createData = await resCreate.json();
-          logId = createData._id;
-        }
-
-        setMealLogId(logId); // store the log ID in state
+        logId = (await resCreate.json())._id;
+        setMealLogId(logId);
       }
 
-      // Step 2: Construct the meal object
       const meal = {
         mealType: currentRecipe.mealType || "lunch",
         source: currentRecipe.source || "home-cooked",
-        meal_id: new Date().getTime().toString(),
+        meal_id: Date.now().toString(),
         mealName: currentRecipe.recipeName,
         totalCalories: currentRecipe.totalCalories,
         proteinGrams: currentRecipe.proteinGrams,
@@ -351,169 +170,135 @@ export default function Home() {
         fatGrams: currentRecipe.fatGrams,
       };
 
-      // Step 3: Add meal to the log
-      const resAdd = await fetch("https://squire-app.onrender.com/meals/add-meal", {
+      await fetch(`${API}/meals/add-meal`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ mealLog_id: logId, meal }),
       });
 
-      const updatedLog = await resAdd.json();
-      console.log("✅ Meal added:", updatedLog);
-      setUserId(userId); // ensure userId is set
-      setGenRecipe(true);
-
+      setHistoryRefresh((n) => n + 1);
+      setSearchState("idle");
+      setCurrentRecipe(null);
+      setSearchQuery("");
     } catch (err) {
-      console.error("❌ Error logging meal:", err);
+      console.error("log meal failed", err);
+    } finally {
+      setLogging(false);
     }
-  });
+  }, [currentRecipe, logging, mealLogId]);
 
-  useEffect(() => {
-    if (!genRecipe) {
-      logMeal();
-      
-      // Reload the current page;
-    } else {
-      console.log(genRecipe);
-      window.location.reload()
-    }
-
-  }, [genRecipe])
-
-  // async function updateDailyMacrosOnBackend(updatedMacros) {
-  //   try {
-  //     const response = await fetch('https://squire-app.onrender.com/users/update-macros', {
-  //       method: 'POST',
-  //       headers: { 'Content-Type': 'application/json' },
-  //       body: JSON.stringify({
-  //         userId, // your logged-in user
-  //         ...updatedMacros
-  //       }),
-  //     });
-
-  //     if (!response.ok) throw new Error('Failed to update macros');
-
-  //     const data = await response.json();
-  //     console.log('✅ Updated macros on backend:', data);
-
-  //   } catch (error) {
-  //     console.error('❌ Error updating macros:', error);
-  //   }
-  // }
-
-
-console.log(userData);
- console.log("HIIII", remainingCalories, remainingProteins, remainingCarbs, remainingFats);
+  const firstName = userData?.preferred_name || userData?.name;
 
   return (
-    <div className="min-h-screen font-sans dark:bg-light bg-white">
-      <main
-        className="
-          flex flex-col
-          items-start
-          justify-start
-          px-6 sm:px-10 md:px-20 lg:px-40 xl:px-60
-          py-10
-          space-y-10
-        "
-      >
+    <main className="mx-auto max-w-5xl px-5 py-10 sm:px-8 sm:py-14">
+      {/* Greeting */}
+      <header className="mb-8">
+        <p className="font-mono text-xs uppercase tracking-widest text-brass">Your day</p>
+        <h1 className="mt-1 font-display text-4xl font-semibold text-ink sm:text-5xl">
+          {firstName ? `Good day, ${firstName}.` : "Good day."}
+        </h1>
+        <p className="mt-2 text-ink-soft">Here&apos;s what&apos;s left of your provisions.</p>
+      </header>
 
-        {/* Search and Charts Side by Side */}
-        <div className="flex flex-col md:flex-row w-full gap-8 items-start">
-          {/* Left: Hello name and search bar */}
-          <div className="flex flex-col gap-4 md:w-1/2 w-full">
-            <h1
-              className="
-            text-black
-            text-[clamp(1.8rem,4vw,3rem)]
-            font-semibold
-          "
-            >
-              Hello, {userData ? userData.preferred_name || userData.name : ""} 👋
-            </h1>
-            <div className="mt-30 max-lg:mt-3 max-lg:mb-3">
-              <SearchBar
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onSearch={() => handleSearch(searchQuery)}
+      {/* Signature: what's left today */}
+      <section className="rounded-3xl border border-line bg-surface p-6 shadow-sm sm:p-8">
+        <div className="mb-6 flex items-baseline justify-between">
+          <h2 className="font-display text-xl font-semibold text-ink">What&apos;s left today</h2>
+          {usingDefaults && (
+            <span className="font-mono text-[0.65rem] uppercase tracking-wider text-ink-faint">
+              default targets
+            </span>
+          )}
+        </div>
+        <div className="flex flex-col items-center gap-8 lg:flex-row lg:items-center lg:justify-between">
+          <MacroRing
+            label="Calories"
+            unit="kcal"
+            remaining={remaining.calories}
+            total={targets.calories}
+            color={MACROS[0].color}
+            size={200}
+            stroke={16}
+            big
+          />
+          <div className="grid grid-cols-3 gap-6">
+            {MACROS.slice(1).map((m) => (
+              <MacroRing
+                key={m.key}
+                label={m.label}
+                unit={m.unit}
+                remaining={remaining[m.key]}
+                total={targets[m.key]}
+                color={m.color}
               />
-            </div>
-
-
-          </div>
-
-          {/* Right: Pie Charts */}
-          <div className="bg-gray-100 p-4 rounded-lg md:w-1/2 w-full">
-            <h2 className="font-semibold mb-4">Remaining Daily Macros</h2>
-
-            {/* Layout for charts */}
-            <div className="flex flex-col lg:flex-row items-center justify-center gap-6 pb-20">
-              {/* Left - Big Calorie Chart */}
-              <div className="flex-1 flex justify-center">
-                <div className="w-64 h-64">
-                  <Piechart data={calorieData} font={1.4} inner={85} outer={125} color={['#a3a3a3', '#22c55e']} />
-                </div>
-              </div>
-
-              {/* Right - Smaller stacked charts */}
-              <div className="flex flex-col gap-0 items-center justify-center max-lg:flex-row">
-                <div className="w-32 h-32">
-                  <Piechart data={proteinData} font={0.65} color={['#c3c3c3', '#26f7fd']} />
-                </div>
-                <div className="w-32 h-32">
-                  <Piechart data={carbData} font={0.7} color={['#c3c3c3', '#f8ff26ff']} />
-                </div>
-                <div className="w-32 h-32">
-                  <Piechart data={fatData} font={0.7} color={['#c3c3c3', '#ff4c4cff']} />
-                </div>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
+      </section>
 
-        {/* Result of search bar */}
-        <div>
-          {showResult && currentRecipe && (
-            <div className="flex flex-col gap-2 items-center w-full">
-              <SearchResult text={resultText} />
-              <button
-                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-                onClick={async () => {
-                  // await addRecipeToDailyIntake(); // update macros
-                  logMeal(); // log meal separately
-                }}
-              >
-                Add to Daily Intake
-              </button>
+      {/* Ask Squire */}
+      <section className="mt-10">
+        <h2 className="font-display text-xl font-semibold text-ink">Ask your squire</h2>
+        <p className="mt-1 text-sm text-ink-soft">
+          Tell Squire what you feel like — it&apos;ll suggest a meal that fits what&apos;s left.
+        </p>
+        <div className="mt-4 max-w-xl">
+          <SearchBar
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onSearch={() => handleSearch(searchQuery)}
+          />
+        </div>
 
-            </div>
-          )}
+        {searchState === "loading" && (
+          <div className="mt-5 max-w-2xl animate-pulse rounded-2xl border border-line bg-surface p-6 shadow-sm">
+            <div className="h-3 w-24 rounded bg-sunk" />
+            <div className="mt-3 h-6 w-2/3 rounded bg-sunk" />
+            <div className="mt-4 h-20 rounded bg-sunk" />
+          </div>
+        )}
 
-          {showResult && !currentRecipe && (
+        {searchState !== "loading" && resultText && (
+          <div className="mt-5 max-w-2xl space-y-4">
             <SearchResult text={resultText} />
-          )}
-        </div>
+            {currentRecipe && (
+              <button
+                onClick={addToToday}
+                disabled={logging}
+                className="inline-flex items-center gap-2 rounded-full bg-squire px-5 py-2.5 font-medium text-surface transition-colors hover:bg-squire-bright disabled:opacity-60"
+              >
+                {logging ? "Adding…" : "Add to today"}
+              </button>
+            )}
+          </div>
+        )}
+      </section>
 
-        <ScrollBox userId={userId} />
-        {/* Button boxes */}
-        <div
-          className="
-            flex flex-wrap justify-center  /* <-- center horizontally */
-            gap-4 sm:gap-6 md:gap-8 lg:gap-10
-            pt-8 sm:pt-10 md:pt-12
-            w-full     
-          "
-        >
+      {/* Recent days */}
+      <section className="mt-12">
+        <h2 className="mb-4 font-display text-xl font-semibold text-ink">Recent days</h2>
+        <ScrollBox userId={USER_ID} refreshSignal={historyRefresh} />
+      </section>
+
+      {/* Connect */}
+      <section className="mt-12">
+        <h2 className="mb-4 font-display text-xl font-semibold text-ink">Connect</h2>
+        <div className="max-w-md">
           <Link href="/knot-integration">
             <BoxButton
-              imageSrc="https://www.knotapi.com/static/images/favicons/apple-touch-icon.png"
-              title="Sync merchant Data"
-              onClick={() => console.log('Messages clicked!')}
+              title="Sync merchant data"
+              description="Link your accounts so Squire learns from what you buy."
+              icon={
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M20 7h-9M14 17H5" />
+                  <circle cx="17" cy="17" r="3" />
+                  <circle cx="7" cy="7" r="3" />
+                </svg>
+              }
             />
           </Link>
         </div>
-
-      </main>
-    </div>
+      </section>
+    </main>
   );
 }

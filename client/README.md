@@ -1,36 +1,34 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Squire — client
 
-## Getting Started
+Squire is a nutrition attendant. You set your daily macro targets once; Squire
+tracks what's left of the day, suggests meals that fit, and keeps a record of
+what you've eaten.
 
-First, run the development server:
+This is the web client — a [Next.js](https://nextjs.org) (App Router) app.
+
+## Run it
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:5173.
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+## Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `app/page.js` — landing page (hero previews the "what's left today" rings).
+- `app/dashboard/page.js` — the daily dashboard: remaining-macro rings, meal
+  suggestions, recent days.
+- `app/knot-integration/page.js` — links merchant accounts via Knot.
+- `app/Components/MacroRing.js` — the signature ring that depletes as you log meals.
+- `app/globals.css` — design tokens (colours, type roles) live in the `@theme` block.
 
-## Learn More
+## Design system
 
-To learn more about Next.js, take a look at the following resources:
+- **Colour:** warm parchment canvas, heraldic herb-green + brass, and an earthen
+  macro family (herb / clay / wheat / slate).
+- **Type:** Bricolage Grotesque (display), Inter (body), Space Mono (numbers).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The client talks to the API at `https://squire-app.onrender.com`. Set
+`NEXT_PUBLIC_API_URL` and `NEXT_PUBLIC_KNOT_CLIENT_ID` to override.

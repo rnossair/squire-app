@@ -1,152 +1,136 @@
-'use client'; 
-import dynamic from 'next/dynamic';
-// import KnotapiJS from 'knotapi-js';
-import React, { useState, useEffect } from 'react';
-// import KnotapiJS  from 'knotapi-js';
+'use client';
+import React, { useState } from 'react';
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://squire-app.onrender.com';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+// MOCK USER ID: replace with the actual logged-in user's ID.
+const MOCK_USER_ID = '690fc7733d3f4948a7d89600';
 
-// --- UTILITY FUNCTIONS ---
-
-// 1. Calls Express to get the temporary session ID
 const getKnotSessionId = async (userId) => {
-    const response = await fetch(`https://squire-app.onrender.com/knot/session/create`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId }),
-    });
-    if (!response.ok) throw new Error('Failed to create Knot session ID.');
-    const data = await response.json(); 
-    console.log(data)
-    return data.session;
+  const response = await fetch(`${API_BASE_URL}/knot/session/create`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId }),
+  });
+  if (!response.ok) throw new Error('Failed to create Knot session.');
+  const data = await response.json();
+  return data.session;
 };
 
-// 2. Calls Express to exchange the publicToken for the permanent accessToken
 const exchangePublicToken = async (publicToken, userId) => {
-    const response = await fetch(`${API_BASE_URL}/api/knot/exchange`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ publicToken, userId }),
-    });
-    if (!response.ok) {
-         const errorBody = await response.json();
-         throw new Error(errorBody.message || 'Failed to exchange public token.');
-    }
-    return response.json();
+  const response = await fetch(`${API_BASE_URL}/api/knot/exchange`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ publicToken, userId }),
+  });
+  if (!response.ok) {
+    const errorBody = await response.json().catch(() => ({}));
+    throw new Error(errorBody.message || 'Failed to exchange token.');
+  }
+  return response.json();
 };
 
-// --- MAIN COMPONENT ---
+const STATUS_COPY = {
+  ready: 'Not linked yet',
+  linking: 'Opening secure widget…',
+  exchanging: 'Confirming the link…',
+  success: 'Linked',
+  error: 'Something went wrong',
+};
 
 export default function KnotLinkPage() {
-    // --- State Management ---
-    const [loading, setLoading] = useState(false);
-    const [status, setStatus] = useState('ready'); // ready, linking, success, error
-    const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState('ready');
+  const [error, setError] = useState(null);
 
-    // --- EFFECTS ---
+  const handleLinkStart = async () => {
+    setLoading(true);
+    setStatus('linking');
+    setError(null);
 
-    // MOCK USER ID: Replace with a mechanism to get the actual logged-in user's ID
-    const MOCK_USER_ID = "690fc7733d3f4948a7d89600"; 
-    console.log(API_BASE_URL)
-    // --- LINK HANDLER ---
-    const handleLinkStart = async () => {
-        setLoading(true);
-        setStatus('linking');
-        setError(null);
+    try {
+      const sessionId = await getKnotSessionId(MOCK_USER_ID);
+      const KnotapiJS = window.KnotapiJS?.default;
+      if (!KnotapiJS) throw new Error('Knot widget failed to load. Refresh and try again.');
+      const knotapi = new KnotapiJS();
 
-        try {
-            // STEP 1: Get Session ID from Express Backend
-            const sessionId = await getKnotSessionId(MOCK_USER_ID);
-
-            // STEP 2: Initialize and Open the Widget;
-            const KnotapiJS = window.KnotapiJS.default
-            const knotapi = new KnotapiJS();
-            
-            knotapi.open({
-                sessionId: sessionId,
-                clientId: process.env.NEXT_PUBLIC_KNOT_CLIENT_ID, 
-                environment: 'development', 
-                product: 'transaction_link', 
-                merchantIds: [36], // Empty array means all merchants
-                // STEP 3: Handle Success - Public Token Received
-                onSuccess: async (publicToken) => {
-                    setStatus('exchanging');
-                    setLoading(true);
-                    
-                    try {
-                        // Call Express to exchange the publicToken for the permanent accessToken
-                        await exchangePublicToken(publicToken, MOCK_USER_ID); 
-                        setStatus('success');
-                    } catch (err) {
-                        setStatus('error');
-                        setError(err.message);
-                    } finally {
-                        setLoading(false);
-                    }
-                },
-                
-                onExit: () => setLoading(false),
-                onError: (err) => {
-                    setError(`Knot Error: ${err.message}`);
-                    setLoading(false);
-                    setStatus('error');
-                },
-            });
-
-        } catch (err) {
-            setError(err.message);
-            setLoading(false);
+      knotapi.open({
+        sessionId,
+        clientId: process.env.NEXT_PUBLIC_KNOT_CLIENT_ID,
+        environment: 'development',
+        product: 'transaction_link',
+        merchantIds: [36],
+        onSuccess: async (publicToken) => {
+          setStatus('exchanging');
+          setLoading(true);
+          try {
+            await exchangePublicToken(publicToken, MOCK_USER_ID);
+            setStatus('success');
+          } catch (err) {
             setStatus('error');
-        }
-    };
+            setError(err.message);
+          } finally {
+            setLoading(false);
+          }
+        },
+        onExit: () => setLoading(false),
+        onError: (err) => {
+          setError(`Knot error: ${err.message}`);
+          setLoading(false);
+          setStatus('error');
+        },
+      });
+    } catch (err) {
+      setError(err.message);
+      setLoading(false);
+      setStatus('error');
+    }
+  };
 
-    // --- RENDER ---
-    return (
-        <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-50">
-            <script src="https://unpkg.com/knotapi-js@next"></script>
-            <div className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md">
-                <h1 className="text-3xl font-bold mb-6 text-center">
-                    Link Merchant Accounts 🛒
-                </h1>
+  const statusTone =
+    status === 'success'
+      ? 'bg-squire text-surface'
+      : status === 'error'
+      ? 'bg-protein text-surface'
+      : status === 'linking' || status === 'exchanging'
+      ? 'bg-brass text-surface'
+      : 'bg-sunk text-ink-soft';
 
-                {/* Status Indicator */}
-                <p className="mb-4 text-sm text-center font-medium">
-                    Status: <span className={`p-1 rounded text-white ${
-                        status === 'success' ? 'bg-green-500' : 
-                        status === 'linking' || status === 'exchanging' ? 'bg-yellow-500' : 'bg-gray-400'
-                    }`}>
-                        {status.charAt(0).toUpperCase() + status.slice(1)}
-                    </span>
-                </p>
+  return (
+    <main className="mx-auto flex min-h-[70vh] max-w-md flex-col items-center justify-center px-5 py-16">
+      {/* eslint-disable-next-line @next/next/no-sync-scripts */}
+      <script src="https://unpkg.com/knotapi-js@next" async />
 
-                {/* Conditional Rendering */}
-                {status === 'success' ? (
-                    <div className="text-center text-green-600 font-semibold">
-                        ✅ Accounts successfully linked!
-                    </div>
-                ) : (
-                    <button
-                        onClick={handleLinkStart}
-                        disabled={loading}
-                        className={`w-full py-3 rounded-lg text-white font-semibold transition ${
-                            loading ? 'bg-indigo-300 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700'
-                        }`}
-                    >
-                        {loading ? 'Opening Secure Widget...' : 'Start Linking Process'}
-                    </button>
-                )}
-                
-                {error && <p className="mt-4 text-red-600 text-center">{error}</p>}
-                
-            </div>
-            <p className="mt-4 text-xs text-gray-500">
-                You are securely linking as user ID: {MOCK_USER_ID}
-            </p>
+      <div className="w-full rounded-3xl border border-line bg-surface p-8 shadow-sm">
+        <p className="font-mono text-xs uppercase tracking-widest text-brass">Connect</p>
+        <h1 className="mt-1 font-display text-3xl font-semibold text-ink">Link your accounts</h1>
+        <p className="mt-2 text-ink-soft">
+          Connect a merchant so Squire can learn from what you actually buy.
+        </p>
+
+        <div className="mt-6 flex items-center gap-2 text-sm">
+          <span className="text-ink-soft">Status</span>
+          <span className={`rounded-full px-3 py-1 font-medium ${statusTone}`}>
+            {STATUS_COPY[status]}
+          </span>
         </div>
-    );
-}
 
-// You can learn more about managing complex data-fetching flows and state in React 
-// components by watching this video. [How to use useState and useEffect in Next Js] (https://www.youtube.com/watch?v=RZiLHPChkgY)
-// This video explains how to use useState and useEffect in Next.js, which are necessary for the client-side logic of the Knot API integration.
+        {status === 'success' ? (
+          <p className="mt-6 rounded-xl bg-canvas px-4 py-3 text-squire">
+            Your account is linked. Squire will start using your purchases.
+          </p>
+        ) : (
+          <button
+            onClick={handleLinkStart}
+            disabled={loading}
+            className="mt-6 w-full rounded-full bg-squire py-3.5 font-medium text-surface transition-colors hover:bg-squire-bright disabled:opacity-60"
+          >
+            {loading ? 'Opening…' : 'Link an account'}
+          </button>
+        )}
+
+        {error && <p className="mt-4 text-sm text-protein">{error}</p>}
+      </div>
+    </main>
+  );
+}

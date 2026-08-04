@@ -1,46 +1,106 @@
 @import "tailwindcss";
 
+@theme {
+  /* Canvas & ink — warm parchment, never pure white/black */
+  --color-canvas: #f4f1e8;
+  --color-surface: #fffdf7;
+  --color-sunk: #eae6d8;
+  --color-ink: #23271c;
+  --color-ink-soft: #5f6353;
+  --color-ink-faint: #8c8d7c;
+  --color-line: #ddd8c7;
+
+  /* Brand — heraldic herb & brass */
+  --color-squire: #2f5233;
+  --color-squire-bright: #3e6b3c;
+  --color-brass: #b0842c;
+  --color-brass-soft: #cbaa5c;
+
+  /* Macro family — one earthen scale, distinguishable and calm */
+  --color-cal: #3e6b3c;
+  --color-protein: #b4552e;
+  --color-carb: #bf922c;
+  --color-fat: #4e6e7a;
+  --color-track: #e4dfce;
+
+  /* Type roles */
+  --font-display: var(--font-bricolage), Georgia, serif;
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+  --font-mono: var(--font-space-mono), ui-monospace, monospace;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: light;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-/* @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-} */
-
+/* The design is parchment-native and light by intent. Keep the OS dark
+   preference from inverting it into a broken half-theme. */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #ffffff;
-    --foreground: black;
+    color-scheme: light;
   }
 }
 
-
-/* html {
-    color-scheme: light;
-  }
-  
-  @media (prefers-color-scheme: dark) {
-    html {
-      background-color: white;
-      color: black;
-    }
-} */
-
+html {
+  background: var(--color-canvas);
+}
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: "Inter",Arial, Helvetica, sans-serif;
+  min-height: 100vh;
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Faint paper grain — the one ambient detail, kept near-invisible */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Focus that stays visible and on-brand */
+:where(a, button, input, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-squire);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Horizontal scroll strips get a slim, themed track */
+.provision-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-brass-soft) transparent;
+}
+.provision-scroll::-webkit-scrollbar {
+  height: 8px;
+}
+.provision-scroll::-webkit-scrollbar-thumb {
+  background: var(--color-brass-soft);
+  border-radius: 999px;
+}
+
+/* Rings grow from empty to their real value on mount. The "to" state is the
+   element's own inline stroke-dashoffset, so the final fill is always correct
+   even if the animation is skipped. */
+@keyframes ring-in {
+  from {
+    stroke-dashoffset: var(--ring-c);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }

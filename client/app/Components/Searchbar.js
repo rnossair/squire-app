@@ -3,20 +3,23 @@ import React from "react";
 
 export default function SearchBar({ value, onChange, onSearch }) {
   return (
-    <div className="flex w-full">
+    <div className="flex w-full items-stretch overflow-hidden rounded-full border border-line bg-surface shadow-sm focus-within:border-squire">
       <input
         type="text"
         value={value}
         onChange={onChange}
         onKeyDown={(e) => e.key === "Enter" && onSearch()}
-        placeholder="🤔 What will you be eating today..."
-        className="flex-1 border rounded-l-full px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-400"
+        placeholder="What do you fancy eating?"
+        aria-label="Describe a meal for Squire to suggest"
+        className="min-w-0 flex-1 bg-transparent px-5 py-3.5 text-ink placeholder:text-ink-faint focus:outline-none"
       />
       <button
+        type="button"
         onClick={onSearch}
-        className="bg-green-500 text-white px-4 py-2 rounded-r-full hover:bg-green-600"
+        aria-label="Ask Squire for a meal"
+        className="m-1 rounded-full bg-squire px-5 text-sm font-medium text-surface transition-colors hover:bg-squire-bright"
       >
-        🔍
+        Ask
       </button>
     </div>
   );

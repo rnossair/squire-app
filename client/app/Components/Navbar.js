@@ -1,123 +1,68 @@
 'use client'
 
-import React, { useState } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 
-
-
 export default function Navbar() {
-    const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(false)
 
-    return (
-        <nav className="nav bg-zinc-50 text-black">
-            <div className="container h-20 justify-between flex">
-                <h2 className="homebtn h-full w-40 flex items-center justify-center">
-                    <Link href="/" className="h-full w-full flex items-center justify-center text-[clamp(2em,2vw,3vw)] font-bold text-green-400 hover:text-green-200 transition-colors">
-                        [ Squire ]
-                    </Link>
-                </h2>
+  return (
+    <header className="sticky top-0 z-50 border-b border-line bg-canvas/85 backdrop-blur">
+      <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5 sm:px-8">
+        <Link
+          href="/"
+          className="group font-display text-2xl font-semibold tracking-tight text-squire"
+          aria-label="Squire, home"
+        >
+          <span className="text-brass transition-transform group-hover:-translate-x-0.5 inline-block">[</span>
+          <span className="px-1">Squire</span>
+          <span className="text-brass transition-transform group-hover:translate-x-0.5 inline-block">]</span>
+        </Link>
 
-                <div>
-                    <button
-                        className="burger"
-                        aria-label="Toggle menu"
-                        aria-expanded={open}
-                        onClick={() => setOpen((s) => !s)}
-                    >
-                        <span />
-                        <span />
-                        <span />
-                    </button>
+        {/* Desktop */}
+        <div className="hidden items-center gap-7 sm:flex">
+          <Link href="/" className="text-sm text-ink-soft transition-colors hover:text-ink">
+            Home
+          </Link>
+          <Link
+            href="/dashboard"
+            className="rounded-full bg-squire px-4 py-2 text-sm font-medium text-surface transition-colors hover:bg-squire-bright"
+          >
+            Open dashboard
+          </Link>
+        </div>
 
-                    <ul className={`menu ${open ? 'open' : ''} bg-zinc-50 top-2em justify-between items-center text-black max-[768px]:w-[clamp(2em,37vw,42vw)] max-[768px]:h-35 max-[768px]:text-[clamp(1.4em,2vw,3vw)] max-[768px]:z-3`}>
-                        <li>
-                            <Link href="/">Home</Link>
-                        </li>
-                        <li>
-                            <Link href="/dashboard">
-                                <button className="bg-black hover:bg-green-300 text-white font-bold py-2 px-4 rounded">
-                                    Dashboard
-                                </button>
-                            </Link>
-                        </li>
-                    </ul>
-                </div>
-            </div>
+        {/* Mobile toggle */}
+        <button
+          type="button"
+          onClick={() => setOpen((s) => !s)}
+          aria-label={open ? 'Close menu' : 'Open menu'}
+          aria-expanded={open}
+          className="flex h-10 w-10 items-center justify-center rounded-lg text-ink sm:hidden"
+        >
+          <span className="relative block h-4 w-5">
+            <span className={`absolute left-0 block h-0.5 w-5 bg-current transition-all ${open ? 'top-2 rotate-45' : 'top-0'}`} />
+            <span className={`absolute left-0 top-2 block h-0.5 w-5 bg-current transition-opacity ${open ? 'opacity-0' : 'opacity-100'}`} />
+            <span className={`absolute left-0 block h-0.5 w-5 bg-current transition-all ${open ? 'top-2 -rotate-45' : 'top-4'}`} />
+          </span>
+        </button>
+      </nav>
 
-            <style jsx>{`
-                .nav {
-                    // background: #111827;
-                    // color: #fff;
-                }
-                .container {
-                    margin: 0 auto;
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-between;
-                }
-                .brand {
-                    font-weight: 700;
-                    font-size: 1.125rem;
-                    color: #fff;
-                    text-decoration: none;
-                }
-                .burger {
-                    display: none;
-                    background: transparent;
-                    border: none;
-                    padding: 0.25rem;
-                    gap: 4px;
-                    flex-direction: column;
-                }
-                .burger span {
-                    display: block;
-                    width: 22px;
-                    height: 2px;
-                    background: black;
-                    margin: 3px 0;
-                }
-                .menu {
-                    list-style: none;
-                    display: flex;
-                    gap: 1rem;
-                    margin: 0;
-                    padding: 0;
-                }
-
-                .menu a:hover {
-                    background: rgba(255, 255, 255, 0.06);
-                }
-
-                /* Responsive */
-                @media (max-width: 768px) {
-                    .burger {
-                        display: flex;
-                    }
-                    .menu {
-                        position: absolute;
-                        // top: 56px;
-                        right: 1rem;
-                        flex-direction: column;
-                        gap: 0;
-                        overflow: hidden;
-                        transform-origin: top right;
-                        transform: scaleY(0);
-                        transition: transform 150ms ease;
-                        border: 1px solid black;
-                        padding-left: 0.2em;
-                        // box-shadow: 0 6px 18px rgba(2, 6, 23, 0.6);
-                    }
-                    .menu.open {
-                        transform: scaleY(1);
-                    }
-                    .menu li + li a {
-                        border-top: 1px solid rgba(255, 255, 255, 0.03);
-                    }
-                    .menu a {
-                        display: block;
-                    }
-                }
-            `}</style>
-        </nav >
-    )
+      {/* Mobile menu */}
+      <div className={`overflow-hidden border-t border-line bg-canvas transition-[max-height] duration-300 sm:hidden ${open ? 'max-h-40' : 'max-h-0'}`}>
+        <div className="flex flex-col gap-1 px-5 py-3">
+          <Link href="/" onClick={() => setOpen(false)} className="rounded-lg px-3 py-2 text-ink-soft hover:bg-sunk">
+            Home
+          </Link>
+          <Link
+            href="/dashboard"
+            onClick={() => setOpen(false)}
+            className="rounded-lg bg-squire px-3 py-2 font-medium text-surface"
+          >
+            Open dashboard
+          </Link>
+        </div>
+      </div>
+    </header>
+  )
 }
